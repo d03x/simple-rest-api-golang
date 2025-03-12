@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"net/http"
+
 	"dadandev.com/dcbt/internal/domain"
+	"dadandev.com/dcbt/internal/dto"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,6 +20,9 @@ func NewAuth(app *fiber.App, service domain.AuthService) {
 }
 
 func (app authApi) login(ctx *fiber.Ctx) error {
-	app.service.Login()
-	return ctx.SendString("Oke login")
+	data := dto.LoginReq{}
+	data.Email = "dadan@gmail.com"
+	data.Password = "Sumedang"
+	res := app.service.Login(data)
+	return ctx.Status(http.StatusOK).JSON(dto.NewResponseData[dto.AuthRes](res))
 }
