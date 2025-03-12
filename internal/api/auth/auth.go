@@ -10,10 +10,10 @@ type authApi struct {
 }
 
 func NewAuth(app *fiber.App, service domain.AuthService) {
-	ha := authApi{
+	handler := authApi{
 		service: service,
 	}
-	app.Get("/login", ha.login)
+	app.Get("/login", handler.login)
 }
 
 func (app authApi) login(ctx *fiber.Ctx) error {
