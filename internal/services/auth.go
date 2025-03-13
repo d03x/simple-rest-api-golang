@@ -2,11 +2,13 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"dadandev.com/dcbt/internal/domain"
 	"dadandev.com/dcbt/internal/dto"
+	"dadandev.com/dcbt/internal/utils"
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type authService struct {
@@ -30,10 +32,17 @@ func (as authService) Login(ctx context.Context, data dto.LoginReq) (dto.AuthRes
 	if user.Email == "" {
 		return dto.AuthRes{}, domain.InvalidCredential
 	}
-
-	fmt.Println(user)
+	token, err := utils.CreateJwtToken(jwt.MapClaims{
+		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+		"email": user.Email,
+		"name":  user.Name,
+		"id":    user.Id,
+	})
+	if err != nil {
+		return dto.AuthRes{}, err
+	}
 	var res = dto.AuthRes{
-		AccessToken: user.Email,
+		AccessToken: token,
 	}
 	return res, err
 }

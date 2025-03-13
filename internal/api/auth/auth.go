@@ -3,11 +3,13 @@ package auth
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"dadandev.com/dcbt/internal/domain"
 	"dadandev.com/dcbt/internal/dto"
+	"dadandev.com/dcbt/internal/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,10 +21,19 @@ func NewAuth(app fiber.Router, service domain.AuthService) {
 	handler := authApi{
 		service: service,
 	}
+	app.Get("/", handler.validateJwt)
 	app.Get("/login", handler.login)
 	app.Get("/users", handler.getUser)
 }
+func (app authApi) validateJwt(ctx *fiber.Ctx) error {
 
+	dat, err := utils.ValidateJwt("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImRhGFuQGdtYWlsLmNvbSIsImV4cCI6MTc0MTk2NjI0NiwiaWQiOiI2ODE4MmExMy1mZmU1LTExZWYtYjdlZi1mMGRlZjFiOWVmNzQiLCJuYW1lIjoiaGVucmEifQ.syAR9evrRfqF-QfhNHD7WEOhmjBXbQxB-qSFGIaYJPc")
+	if err != nil {
+		slog.ErrorContext(ctx.Context(), err.Error())
+		return ctx.Status(http.StatusInternalServerError).JSON(dto.NewResponseMessage("Token is Invalid"))
+	}
+	return ctx.Status(http.StatusOK).JSON(dto.NewResponseMessage(dat.Email))
+}
 func (app authApi) login(ctx *fiber.Ctx) error {
 	c, cancel := context.WithTimeout(ctx.Context(), 3*time.Second)
 	defer cancel()
