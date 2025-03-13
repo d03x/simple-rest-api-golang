@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"time"
 
 	"dadandev.com/dcbt/internal/api/auth"
 	"dadandev.com/dcbt/internal/database"
@@ -15,7 +16,7 @@ import (
 
 type Server struct {
 	config interfaces.Config
-	db     sql.DB
+	db     *sql.DB
 }
 
 func NewServer(config interfaces.Config) *Server {
@@ -28,21 +29,28 @@ func (server *Server) InitalizeServer() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	defer db.Close()
-	server.db = *db
+	server.db = db
 }
 
 // run server
 func (server *Server) Start() error {
 	runtime.GOMAXPROCS(2)
 	app := fiber.New()
+	defer server.db.Close()
 	//for services
-	authService := services.NewAuth(&server.db)
+	authService := services.NewAuth(server.db)
 	auth.NewAuth(app, authService)
 	go func() {
 		err := app.Listen(server.config.AppConfig.Port)
 		if err != nil {
 			log.Fatalf("Server error %s", err.Error())
+		}
+	}()
+	go func() {
+		status := "Server berjalan"
+		_, err := server.db.Exec("INSERT INTO logs (time,log) VALUES(?,?)", time.Now(), status)
+		if err != nil {
+			log.Fatal(err.Error())
 		}
 	}()
 	fmt.Print("Tidak menunggu Listen")
