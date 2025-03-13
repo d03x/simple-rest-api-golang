@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"dadandev.com/dcbt/internal/domain"
 	"dadandev.com/dcbt/internal/dto"
@@ -12,7 +14,7 @@ type authApi struct {
 	service domain.AuthService
 }
 
-func NewAuth(app *fiber.App, service domain.AuthService) {
+func NewAuth(app fiber.Router, service domain.AuthService) {
 	handler := authApi{
 		service: service,
 	}
@@ -29,6 +31,11 @@ func (app authApi) login(ctx *fiber.Ctx) error {
 }
 
 func (app authApi) getUser(ctx *fiber.Ctx) error {
-	users := app.service.GetUser()
+	c, cancel := context.WithTimeout(ctx.Context(), 10+time.Second)
+	defer cancel()
+	users, err := app.service.GetUser(c)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(dto.NewResponseMessage(err.Error()))
+	}
 	return ctx.Status(fiber.StatusOK).JSON(dto.NewResponseData[[]dto.UserRes](users))
 }

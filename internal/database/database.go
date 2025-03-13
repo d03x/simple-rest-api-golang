@@ -2,15 +2,27 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
 
+	"dadandev.com/dcbt/internal/interfaces"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func Connect() (*sql.DB, error) {
-	db, err := sql.Open("mysql", "root:root@tcp(localhost:3306)/db_golang")
-
+func Connect(dbConf interfaces.Database) *sql.DB {
+	database_url := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		dbConf.User,
+		dbConf.Password,
+		dbConf.Host,
+		dbConf.Port,
+		dbConf.Database)
+	db, err := sql.Open("mysql", database_url)
 	if err != nil {
-		return nil, err
+		log.Fatal("Gagal koneksi kedatabase: ", err.Error())
 	}
-	return db, nil
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("Gagal koneksi kedatabase: ", err.Error())
+	}
+	return db
 }

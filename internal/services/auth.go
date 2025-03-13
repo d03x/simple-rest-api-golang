@@ -1,21 +1,20 @@
 package services
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
+	"context"
 
 	"dadandev.com/dcbt/internal/domain"
 	"dadandev.com/dcbt/internal/dto"
+	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 )
 
 type authService struct {
-	db *sql.DB
+	repository domain.UserRepository
 }
 
-func NewAuth(db *sql.DB) domain.AuthService {
+func NewAuth(repository domain.UserRepository) domain.AuthService {
 	return authService{
-		db: db,
+		repository: repository,
 	}
 }
 
@@ -26,28 +25,23 @@ func (as authService) Login(data dto.LoginReq) dto.AuthRes {
 	return res
 }
 
-func (as authService) GetUser() []dto.UserRes {
+func (as authService) GetUser(ctx context.Context) ([]dto.UserRes, error) {
+	res := []dto.UserRes{}
+	user, err := as.repository.GetAll(ctx)
 
-	rows, err := as.db.Query("SELECT * FROM users")
 	if err != nil {
-		log.Fatal(err.Error())
+		return []dto.UserRes{}, err
 	}
 
-	defer rows.Close()
-
-	var userdata []dto.UserRes
-
-	for rows.Next() {
-		var each = dto.UserRes{}
-		err = rows.Scan(&each.Id, &each.Name, &each.Email)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		userdata = append(userdata, each)
+	for _, data := range user {
+		res = append(res, dto.UserRes{
+			Email:      data.Email,
+			Id:         data.Id,
+			Name:       data.Name,
+			DeviceId:   data.DeviceId,
+			LastActive: data.LastActive,
+		})
 	}
-	if err = rows.Err(); err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println(userdata)
-	return userdata
+
+	return res, err
 }

@@ -28,6 +28,7 @@ func Get() *interfaces.Config {
 			User:     os.Getenv("DB_USER"),
 			Password: os.Getenv("DB_PASSWORD"),
 			Database: os.Getenv("DB_NAME"),
+			Port:     os.Getenv("DB_PORT"),
 		},
 		Storage: interfaces.Storage{
 			BackUpPath: os.Getenv("BACKUP_PATH"),
