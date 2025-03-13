@@ -17,6 +17,7 @@ func NewAuth(app *fiber.App, service domain.AuthService) {
 		service: service,
 	}
 	app.Get("/login", handler.login)
+	app.Get("/users", handler.getUser)
 }
 
 func (app authApi) login(ctx *fiber.Ctx) error {
@@ -25,4 +26,9 @@ func (app authApi) login(ctx *fiber.Ctx) error {
 	data.Password = "Sumedang"
 	res := app.service.Login(data)
 	return ctx.Status(http.StatusOK).JSON(dto.NewResponseData[dto.AuthRes](res))
+}
+
+func (app authApi) getUser(ctx *fiber.Ctx) error {
+	users := app.service.GetUser()
+	return ctx.Status(fiber.StatusOK).JSON(dto.NewResponseData[[]dto.UserRes](users))
 }

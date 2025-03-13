@@ -20,3 +20,4 @@ type Config struct {
 	Storage   Storage
 	Database  Database
 }
+

@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"log"
+
 	"dadandev.com/dcbt/internal/api/auth"
 	"dadandev.com/dcbt/internal/interfaces"
 	"dadandev.com/dcbt/internal/services"
@@ -19,12 +21,16 @@ func NewServer(config interfaces.Config, store string) *Server {
 	}
 }
 
+// run server
 func (s *Server) Start() error {
+	db, err := Connect()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	defer db.Close()
 	app := fiber.New()
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello world")
-	})
-	authService := services.NewAuth()
+	//for services
+	authService := services.NewAuth(db)
 	auth.NewAuth(app, authService)
 	return app.Listen(s.config.AppConfig.Port)
 }
