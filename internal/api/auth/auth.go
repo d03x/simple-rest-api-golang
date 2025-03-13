@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -23,10 +24,18 @@ func NewAuth(app fiber.Router, service domain.AuthService) {
 }
 
 func (app authApi) login(ctx *fiber.Ctx) error {
+	c, cancel := context.WithTimeout(ctx.Context(), 3*time.Second)
+	defer cancel()
 	data := dto.LoginReq{}
 	data.Email = "dadan@gmail.com"
 	data.Password = "Sumedang"
-	res := app.service.Login(data)
+	res, err := app.service.Login(c, data)
+	if err != nil {
+		if errors.Is(err, domain.InvalidCredential) {
+			return ctx.Status(fiber.StatusUnauthorized).JSON(dto.NewResponseMessage("Invalid credentials tolong cek kredensial anda atau pake user lain"))
+		}
+		return ctx.Status(fiber.StatusInternalServerError).JSON(dto.NewResponseMessage("An internal server error has occurred. Please try again later. If the issue persists, contact support for further assistance. We apologize for any inconvenience."))
+	}
 	return ctx.Status(http.StatusOK).JSON(dto.NewResponseData[dto.AuthRes](res))
 }
 

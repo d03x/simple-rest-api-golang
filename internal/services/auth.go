@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"dadandev.com/dcbt/internal/domain"
 	"dadandev.com/dcbt/internal/dto"
@@ -18,11 +19,23 @@ func NewAuth(repository domain.UserRepository) domain.AuthService {
 	}
 }
 
-func (as authService) Login(data dto.LoginReq) dto.AuthRes {
-	var res = dto.AuthRes{}
-	res.AccessToken = "3243225235"
+func (as authService) Login(ctx context.Context, data dto.LoginReq) (dto.AuthRes, error) {
 
-	return res
+	user, err := as.repository.FindByEmail(ctx, domain.User{
+		Email: data.Email,
+	})
+	if err != nil {
+		return dto.AuthRes{}, err
+	}
+	if user.Email == "" {
+		return dto.AuthRes{}, domain.InvalidCredential
+	}
+
+	fmt.Println(user)
+	var res = dto.AuthRes{
+		AccessToken: user.Email,
+	}
+	return res, err
 }
 
 func (as authService) GetUser(ctx context.Context) ([]dto.UserRes, error) {

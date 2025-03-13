@@ -30,3 +30,16 @@ func (u *userRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 	err := dataset.ScanStructsContext(ctx, &user)
 	return user, err
 }
+func (u *userRepository) FindByEmail(ctx context.Context, user domain.User) (domain.User, error) {
+	users := domain.User{}
+	_, err := u.db.From("users").Select(&domain.User{}).Where(goqu.Ex{
+		"email": user.Email,
+	}).ScanStructContext(ctx, &users)
+
+	if err != nil {
+		return domain.User{}, err
+	}
+
+	return users, err
+
+}
