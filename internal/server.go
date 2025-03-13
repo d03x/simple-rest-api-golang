@@ -9,6 +9,7 @@ import (
 	"dadandev.com/dcbt/internal/api/siswa"
 	"dadandev.com/dcbt/internal/database"
 	"dadandev.com/dcbt/internal/interfaces"
+	"dadandev.com/dcbt/internal/middleware"
 	"dadandev.com/dcbt/internal/repository"
 	"dadandev.com/dcbt/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -34,12 +35,11 @@ func (server *Server) Start() error {
 	runtime.GOMAXPROCS(2)
 	app := fiber.New()
 	api := app.Group("/api")
-
+	authMiddleware := middleware.AuthenticationMiddleware()
 	userRepository := repository.NewUserRepository(server.db)
 	authService := services.NewAuth(userRepository)
-	auth.NewAuth(api, authService)
-
-	siswa.NewSiswa(api)
+	auth.NewAuth(api, authMiddleware, authService)
+	siswa.NewSiswa(api, authMiddleware)
 	go func() {
 		err := app.Listen(server.config.AppConfig.Port)
 		if err != nil {

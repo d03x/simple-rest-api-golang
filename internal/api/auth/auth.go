@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -17,13 +18,13 @@ type authApi struct {
 	service domain.AuthService
 }
 
-func NewAuth(app fiber.Router, service domain.AuthService) {
+func NewAuth(app fiber.Router, authHandler fiber.Handler, service domain.AuthService) {
 	handler := authApi{
 		service: service,
 	}
 	app.Get("/", handler.validateJwt)
 	app.Get("/login", handler.login)
-	app.Get("/users", handler.getUser)
+	app.Get("/users", authHandler, handler.getUser)
 }
 func (app authApi) validateJwt(ctx *fiber.Ctx) error {
 
@@ -51,6 +52,10 @@ func (app authApi) login(ctx *fiber.Ctx) error {
 }
 
 func (app authApi) getUser(ctx *fiber.Ctx) error {
+	loc := ctx.Locals("x-user")
+	if loc != nil {
+		fmt.Println(loc)
+	}
 	c, cancel := context.WithTimeout(ctx.Context(), 10+time.Second)
 	defer cancel()
 	users, err := app.service.GetUser(c)

@@ -5,7 +5,7 @@ import "github.com/gofiber/fiber/v2"
 type siswaApi struct {
 }
 
-func NewSiswa(router fiber.Router) {
+func NewSiswa(router fiber.Router, authhandler fiber.Handler) {
 	c := siswaApi{}
 	siswa := router.Group("siswa")
 	siswa.Get("get", c.fetch)
